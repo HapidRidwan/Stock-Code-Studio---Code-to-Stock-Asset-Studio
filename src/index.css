@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #F4F4F5;
+  color: #18181B;
+  font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Subtle Workspace Dot Grid */
+.studio-dot-grid {
+  background-color: #F4F4F5;
+  background-image: radial-gradient(#D4D4D8 1.25px, transparent 1.25px);
+  background-size: 20px 20px;
+}
+
+/* Clean Studio Checkerboard for transparency */
+.checkerboard-clean {
+  background-color: #FFFFFF;
+  background-image: 
+    linear-gradient(45deg, #F4F4F5 25%, transparent 25%),
+    linear-gradient(-45deg, #F4F4F5 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #F4F4F5 75%),
+    linear-gradient(-45deg, transparent 75%, #F4F4F5 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+}
+
+/* Minimalist scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D4D4D8;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #A1A1AA;
+}
+
+/* Clean Canvas Shadow */
+.canvas-shadow {
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
