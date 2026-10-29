@@ -119,7 +119,7 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   return (
     <div 
       ref={containerRef}
-      className="flex-1 relative overflow-hidden studio-dot-grid flex items-center justify-center p-8 select-none"
+      className="flex-1 relative overflow-hidden studio-dot-grid flex items-center justify-center p-2 sm:p-6 md:p-8 select-none"
     >
       {/* Centered Scaled Artboard Container */}
       <div 

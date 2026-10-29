@@ -58,16 +58,16 @@ export const CuratorGuideModal: React.FC<CuratorGuideModalProps> = ({
         className="fixed inset-0 bg-zinc-900/30 backdrop-blur-[2px] transition-opacity animate-fadeIn"
       />
 
-      <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[#E4E4E7] shadow-modal overflow-hidden z-10 animate-fadeIn my-auto max-h-[88vh] flex flex-col">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[#E4E4E7] shadow-modal overflow-hidden z-10 animate-fadeIn my-auto max-h-[90vh] flex flex-col">
         {/* Header (Pinned) */}
-        <div className="h-16 px-6 border-b border-[#E4E4E7] flex items-center justify-between shrink-0">
+        <div className="h-14 sm:h-16 px-4 sm:px-6 border-b border-[#E4E4E7] flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900">
+            <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-900 shrink-0">
               <ShieldCheck className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-900">Checklist & Metadata Adobe Stock</h2>
-              <p className="text-xs text-zinc-500">Standar kurasi teknis & asisten metadata otomatis</p>
+              <h2 className="text-sm font-semibold text-zinc-900">Checklist Adobe Stock</h2>
+              <p className="text-xs text-zinc-500">Standar kurasi teknis & metadata otomatis</p>
             </div>
           </div>
           <button
@@ -79,7 +79,7 @@ export const CuratorGuideModal: React.FC<CuratorGuideModalProps> = ({
         </div>
 
         {/* Content (Scrollable & Padded) */}
-        <div className="p-6 overflow-y-auto flex-1 min-h-0 space-y-4">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0 space-y-4">
           {/* Status checklist */}
           <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200 space-y-2.5">
             <div className="flex items-center justify-between">
@@ -193,7 +193,7 @@ export const CuratorGuideModal: React.FC<CuratorGuideModalProps> = ({
         </div>
 
         {/* Footer (Pinned) */}
-        <div className="h-14 px-6 border-t border-[#E4E4E7] flex items-center justify-end bg-zinc-50 shrink-0">
+        <div className="h-14 px-4 sm:px-6 border-t border-[#E4E4E7] flex items-center justify-end bg-zinc-50 shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold transition"

@@ -169,9 +169,9 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
       />
 
       {/* Slide-over White Drawer */}
-      <aside className="relative w-full max-w-md md:max-w-lg bg-white border-r border-[#E4E4E7] shadow-xl flex flex-col h-full z-10 animate-slideRight">
+      <aside className="relative w-full max-w-full sm:max-w-md md:max-w-lg bg-white border-r border-[#E4E4E7] shadow-xl flex flex-col h-full z-10 animate-slideRight">
         {/* Header */}
-        <div className="h-16 px-6 border-b border-[#E4E4E7] flex items-center justify-between">
+        <div className="h-14 sm:h-16 px-4 sm:px-6 border-b border-[#E4E4E7] flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-sm font-semibold text-zinc-900">Kode & Template</h2>
             <p className="text-xs text-zinc-500">Pilih template siap pakai atau tempel kode Anda</p>
@@ -185,10 +185,10 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
         </div>
 
         {/* Top Minimalist Tab Switcher */}
-        <div className="px-6 pt-4 pb-2 border-b border-zinc-100 flex items-center space-x-2">
+        <div className="px-4 sm:px-6 pt-3 pb-2 border-b border-zinc-100 flex items-center space-x-2 shrink-0 overflow-x-auto">
           <button
             onClick={() => setActiveTab('smart-paste')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
               activeTab === 'smart-paste'
                 ? 'bg-zinc-900 text-white shadow-sm'
                 : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
@@ -200,7 +200,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
 
           <button
             onClick={() => setActiveTab('templates')}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition shrink-0 ${
               activeTab === 'templates'
                 ? 'bg-zinc-900 text-white shadow-sm'
                 : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
@@ -212,7 +212,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
         </div>
 
         {/* Body Content */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
           {activeTab === 'smart-paste' && (
             <div className="space-y-4">
               <div>
@@ -419,7 +419,7 @@ export const SlideOverDrawer: React.FC<SlideOverDrawerProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="h-14 px-6 border-t border-[#E4E4E7] flex items-center justify-end bg-zinc-50">
+        <div className="h-14 px-4 sm:px-6 border-t border-[#E4E4E7] flex items-center justify-end bg-zinc-50 shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-1.5 text-xs font-semibold text-zinc-700 hover:text-zinc-900 transition"

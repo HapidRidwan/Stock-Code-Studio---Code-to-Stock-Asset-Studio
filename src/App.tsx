@@ -73,10 +73,11 @@ export const App: React.FC = () => {
 
   // Auto-fit calculation
   const calculateAutoFit = useCallback(() => {
-    const availableWidth = window.innerWidth - 96;
-    const availableHeight = window.innerHeight - 170; // Header + Dock offset
-    const scaleX = availableWidth / activeWidth;
-    const scaleY = availableHeight / activeHeight;
+    const isMobile = window.innerWidth < 768;
+    const availableWidth = window.innerWidth - (isMobile ? 24 : 96);
+    const availableHeight = window.innerHeight - (isMobile ? 130 : 170); // Header + Dock offset
+    const scaleX = Math.max(0.01, availableWidth / activeWidth);
+    const scaleY = Math.max(0.01, availableHeight / activeHeight);
     const fitScale = Math.min(scaleX, scaleY, 0.95);
     setZoom(Number(fitScale.toFixed(3)));
   }, [activeWidth, activeHeight]);
@@ -201,7 +202,7 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col bg-[#F4F4F5] text-zinc-900 overflow-hidden font-sans select-none">
+    <div className="w-full h-screen h-[100dvh] flex flex-col bg-[#F4F4F5] text-zinc-900 overflow-hidden font-sans select-none">
       {/* 1. Minimal Top Navbar */}
       <TopNavbar
         width={activeWidth}

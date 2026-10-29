@@ -115,9 +115,9 @@ export const CleanExportModal: React.FC<CleanExportModalProps> = ({
       />
 
       {/* Clean White Modal with Pinned Header/Footer and Scrollable Body */}
-      <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[#E4E4E7] shadow-modal overflow-hidden z-10 animate-fadeIn my-auto max-h-[88vh] flex flex-col">
+      <div className="relative w-full max-w-lg bg-white rounded-2xl border border-[#E4E4E7] shadow-modal overflow-hidden z-10 animate-fadeIn my-auto max-h-[90vh] flex flex-col">
         {/* Header (Pinned) */}
-        <div className="h-16 px-6 border-b border-[#E4E4E7] flex items-center justify-between shrink-0">
+        <div className="h-14 sm:h-16 px-4 sm:px-6 border-b border-[#E4E4E7] flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-sm font-semibold text-zinc-900">Unduh File Siap Pakai</h2>
             <p className="text-xs text-zinc-500">Pilih format file sesuai kebutuhan submission atau komersial</p>
@@ -133,7 +133,7 @@ export const CleanExportModal: React.FC<CleanExportModalProps> = ({
         </div>
 
         {/* Content Body (Scrollable & Never Cut Off) */}
-        <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
           {/* Selectable Rows */}
           <div className="space-y-2">
             {options.map((opt) => {
@@ -364,7 +364,7 @@ export const CleanExportModal: React.FC<CleanExportModalProps> = ({
         </div>
 
         {/* Modal Footer (Pinned) */}
-        <div className="h-16 px-6 border-t border-[#E4E4E7] flex items-center justify-between bg-zinc-50 shrink-0">
+        <div className="h-14 sm:h-16 px-4 sm:px-6 border-t border-[#E4E4E7] flex items-center justify-between bg-zinc-50 shrink-0">
           <div>
             {renderProgress.isRendering ? (
               <button
