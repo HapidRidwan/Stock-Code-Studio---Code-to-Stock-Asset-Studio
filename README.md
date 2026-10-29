@@ -5,7 +5,7 @@
 
 ---
 
-## 🎨 Desain Studio Minimalis ("Anti-AI Slop")
+## 🎨 Desain Studio Minimalis
 
 - **Bebas Gimmick Visual AI:** Tanpa gradasi neon ungu-biru, tanpa efek glow berlebihan, tanpa emoji murahan di tombol, dan tanpa kartu-kartu bertumpuk yang menyempitkan layar.
 - **Palet Taktil & Bersih:** 
@@ -16,7 +16,7 @@
 
 ---
 
-## 📐 Arsitektur "Canvas-First" (Ramah Pemula)
+## 📐 Arsitektur "Canvas-First"
 
 1. **Kanvas Preview sebagai Fokus Utama (80% Layar):**
    - Menempatkan hasil visual langsung di tengah layar dengan ruang lega di sekelilingnya.
