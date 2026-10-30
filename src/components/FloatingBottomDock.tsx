@@ -9,7 +9,8 @@ import {
   Palette,
   Check,
   Sparkles,
-  Loader2
+  Loader2,
+  Clock
 } from 'lucide-react';
 import { ResolutionPresetId, BackgroundStyle } from '../types';
 import { CANVAS_PRESETS, SPEED_OPTIONS } from '../constants/presets';
@@ -29,6 +30,7 @@ interface FloatingBottomDockProps {
   onOpenExportModal: () => void;
   isRendering: boolean;
   renderingPercentage: number;
+  detectedDuration?: number;
 }
 
 export const FloatingBottomDock: React.FC<FloatingBottomDockProps> = ({
@@ -45,7 +47,8 @@ export const FloatingBottomDock: React.FC<FloatingBottomDockProps> = ({
   onChangeSpeed,
   onOpenExportModal,
   isRendering,
-  renderingPercentage
+  renderingPercentage,
+  detectedDuration = 10.0
 }) => {
   const [isSizeDropdownOpen, setIsSizeDropdownOpen] = useState(false);
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
@@ -230,6 +233,27 @@ export const FloatingBottomDock: React.FC<FloatingBottomDockProps> = ({
           >
             {speed}x
           </button>
+        </div>
+
+        <div className="w-[1px] h-5 sm:h-6 bg-zinc-200" />
+
+        {/* Indikator Durasi Terdeteksi Otomatis */}
+        <div 
+          className="flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-2.5 py-1 sm:py-1.5 bg-zinc-100/90 border border-zinc-200/80 rounded-xl text-xs font-medium text-zinc-700 select-none shrink-0"
+          title={`Durasi Animasi: ${detectedDuration} Detik (Terdeteksi Otomatis)`}
+        >
+          <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-zinc-500 shrink-0" />
+          <span className="hidden xl:inline text-xs">
+            Durasi Animasi: <strong className="font-semibold text-zinc-900">{detectedDuration} Detik</strong>{' '}
+            <span className="text-[10px] text-zinc-500 font-normal">(Terdeteksi Otomatis)</span>
+          </span>
+          <span className="hidden sm:inline xl:hidden text-xs">
+            Durasi: <strong className="font-semibold text-zinc-900">{detectedDuration}s</strong>{' '}
+            <span className="text-[10px] text-zinc-500 font-normal">(Otomatis)</span>
+          </span>
+          <span className="sm:hidden text-[10px]">
+            <strong className="font-semibold text-zinc-900">{detectedDuration}s</strong>
+          </span>
         </div>
 
         <div className="w-[1px] h-5 sm:h-6 bg-zinc-200" />

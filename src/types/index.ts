@@ -45,6 +45,7 @@ export interface ExportSettings {
   customBgColor: string;
   filename: string;
   includeAlpha: boolean;
+  canvasWindow?: Window | null;
 }
 
 export interface AdobeComplianceResult {

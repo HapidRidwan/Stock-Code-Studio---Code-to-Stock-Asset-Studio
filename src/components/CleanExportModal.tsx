@@ -27,6 +27,7 @@ interface CleanExportModalProps {
   defaultFilename?: string;
   background: string;
   compliance?: AdobeComplianceResult;
+  detectedDuration?: number;
 }
 
 export const CleanExportModal: React.FC<CleanExportModalProps> = ({
@@ -39,12 +40,12 @@ export const CleanExportModal: React.FC<CleanExportModalProps> = ({
   onCancelExport,
   defaultFilename = 'stockcode-asset',
   background,
-  compliance
+  compliance,
+  detectedDuration = 10.0
 }) => {
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('png');
   const [scale, setScale] = useState<1 | 2>(1);
-  const [duration, setDuration] = useState<number>(10);
-  const [fps, setFps] = useState<24 | 30 | 60>(30);
+  const [fps, setFps] = useState<24 | 30 | 60>(60);
   const [showMetadata, setShowMetadata] = useState<boolean>(false);
   const [copiedTitle, setCopiedTitle] = useState(false);
   const [copiedDesc, setCopiedDesc] = useState(false);
@@ -61,7 +62,7 @@ export const CleanExportModal: React.FC<CleanExportModalProps> = ({
       scale: scale,
       jpegQuality: 1.0,
       fps: fps,
-      duration: duration,
+      duration: detectedDuration || 10.0,
       background: isTransparent ? 'transparent' : 'solid-white',
       customBgColor: finalBgColor,
       filename: `${defaultFilename}-${selectedFormat}`,
@@ -179,27 +180,25 @@ export const CleanExportModal: React.FC<CleanExportModalProps> = ({
           {/* Conditional Options for Video */}
           {selectedFormat === 'mp4' && (
             <div className="p-4 bg-zinc-50 rounded-xl border border-zinc-200 space-y-3">
-              <div>
-                <label className="text-[11px] font-semibold text-zinc-700 block mb-1.5 flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-zinc-500" /> Durasi Perekaman:
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[5, 10, 15, 30].map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      disabled={renderProgress.isRendering}
-                      onClick={() => setDuration(d)}
-                      className={`py-1.5 rounded-lg text-xs font-semibold transition ${
-                        duration === d
-                          ? 'bg-zinc-900 text-white shadow-sm'
-                          : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100'
-                      }`}
-                    >
-                      {d} detik
-                    </button>
-                  ))}
+              {/* Dynamic Auto-Detected Duration Badge */}
+              <div className="p-3 bg-white rounded-xl border border-zinc-200 shadow-sm flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center shrink-0">
+                    <Clock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-zinc-900">
+                      Durasi Animasi: <span className="font-bold">{detectedDuration}</span> Detik{' '}
+                      <span className="text-[10px] text-zinc-500 font-normal">(Terdeteksi Otomatis)</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 mt-0.5">
+                      Sinkron frame-by-frame otomatis dari kode kanvas
+                    </p>
+                  </div>
                 </div>
+                <span className="text-[10px] bg-zinc-100 border border-zinc-200 text-zinc-700 px-2 py-0.5 rounded font-semibold tracking-wide shrink-0">
+                  Auto-Detect
+                </span>
               </div>
 
               <div>

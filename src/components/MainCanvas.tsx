@@ -17,6 +17,7 @@ interface MainCanvasProps {
   isPlaying: boolean;
   speed: number;
   onConsoleError: (err: string) => void;
+  onDurationDetected?: (duration: number) => void;
 }
 
 export const MainCanvas: React.FC<MainCanvasProps> = ({
@@ -34,7 +35,8 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
   artboardContentRef,
   isPlaying,
   speed,
-  onConsoleError
+  onConsoleError,
+  onDurationDetected
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -96,8 +98,14 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
           };
           window.__PLAYING__ = ${isPlaying};
           window.__SPEED__ = ${speed};
+          window.isExporting = false;
           try {
             ${js}
+            // Notify parent of detected animation duration if defined
+            var detectedDur = window.ANIMATION_DURATION || window.DURATION;
+            if (typeof detectedDur === 'number' && !isNaN(detectedDur) && detectedDur > 0) {
+              window.parent.postMessage({ type: 'ANIMATION_DURATION_DETECTED', duration: detectedDur }, '*');
+            }
           } catch (e) {
             window.parent.postMessage({ type: 'CONSOLE_ERROR', error: e.toString() }, '*');
           }
@@ -110,11 +118,15 @@ export const MainCanvas: React.FC<MainCanvasProps> = ({
     const handleMessage = (e: MessageEvent) => {
       if (e.data && e.data.type === 'CONSOLE_ERROR') {
         onConsoleError(e.data.error);
+      } else if (e.data && e.data.type === 'ANIMATION_DURATION_DETECTED') {
+        if (typeof e.data.duration === 'number' && onDurationDetected) {
+          onDurationDetected(e.data.duration);
+        }
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [onConsoleError]);
+  }, [onConsoleError, onDurationDetected]);
 
   return (
     <div 

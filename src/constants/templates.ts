@@ -185,110 +185,411 @@ canvas {
   pointer-events: none;
   background: radial-gradient(circle at 50% 50%, transparent 60%, rgba(3, 7, 18, 0.7) 100%);
 }`,
-    js: `// High-Performance 60FPS Particle Physics Simulator
-(function() {
-  const canvas = document.getElementById('particle-canvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  
-  let width = canvas.width = window.innerWidth;
-  let height = canvas.height = window.innerHeight;
+    js: `// High-Performance 60FPS Particle Simulator with Deterministic Step Engine
+const DURATION = 10.0; // Otomatis terbaca oleh UI
+window.ANIMATION_DURATION = DURATION;
 
-  window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
+let isExporting = false;
+let previewStartTime = performance.now();
+
+window.setExportState = function(state) {
+  isExporting = state;
+  if (!state) previewStartTime = performance.now();
+};
+
+window.renderSingleFrame = function(t) {
+  drawScene(t); // Menggambar frame tepat di detik t
+};
+
+const canvas = document.getElementById('particle-canvas');
+if (!canvas) return;
+const ctx = canvas.getContext('2d');
+
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+});
+
+const PARTICLE_COUNT = 140;
+const CONNECTION_DIST = 160;
+
+const PALETTES = [
+  { r: 59, g: 130, b: 246 },   // Electric Blue
+  { r: 147, g: 51, b: 234 },   // Neon Purple
+  { r: 236, g: 72, b: 153 },   // Vivid Pink
+  { r: 45, g: 212, b: 191 },   // Aqua Cyan
+  { r: 251, g: 191, b: 36 }    // Warm Gold
+];
+
+// Seeded deterministic particle parameters
+const particleSeeds = [];
+for (let i = 0; i < PARTICLE_COUNT; i++) {
+  const rand1 = Math.sin(i * 12.9898 + 1.23) * 0.5 + 0.5;
+  const rand2 = Math.cos(i * 78.233 + 4.56) * 0.5 + 0.5;
+  const rand3 = Math.sin(i * 43.123 + 7.89) * 0.5 + 0.5;
+  const rand4 = Math.cos(i * 91.567 + 2.34) * 0.5 + 0.5;
+
+  particleSeeds.push({
+    initX: rand1 * width,
+    initY: rand2 * height,
+    vx: (rand3 - 0.5) * 40,
+    vy: rand4 * 80 + 50,
+    radius: rand1 * 3.5 + 1.2,
+    color: PALETTES[i % PALETTES.length],
+    baseAlpha: rand2 * 0.5 + 0.4,
+    pulseSpeed: rand3 * 2.5 + 1.0,
+    phase: rand4 * Math.PI * 2
   });
+}
 
-  const PARTICLE_COUNT = 140;
-  const CONNECTION_DIST = 160;
-  const particles = [];
+function drawScene(t) {
+  ctx.fillStyle = '#030712';
+  ctx.fillRect(0, 0, width, height);
 
-  const PALETTES = [
-    { r: 59, g: 130, b: 246 },   // Electric Blue
-    { r: 147, g: 51, b: 234 },   // Neon Purple
-    { r: 236, g: 72, b: 153 },   // Vivid Pink
-    { r: 45, g: 212, b: 191 },   // Aqua Cyan
-    { r: 251, g: 191, b: 36 }    // Warm Gold
-  ];
-
-  class Particle {
-    constructor() {
-      this.reset(true);
-    }
-
-    reset(initial = false) {
-      this.x = Math.random() * width;
-      this.y = initial ? Math.random() * height : height + 20;
-      this.vx = (Math.random() - 0.5) * 1.2;
-      this.vy = -(Math.random() * 1.5 + 0.4); // Anti-gravity floating upward
-      this.radius = Math.random() * 3.5 + 1.2;
-      this.color = PALETTES[Math.floor(Math.random() * PALETTES.length)];
-      this.alpha = Math.random() * 0.7 + 0.3;
-      this.pulseSpeed = Math.random() * 0.03 + 0.01;
-      this.pulseAngle = Math.random() * Math.PI * 2;
-    }
-
-    update() {
-      this.x += this.vx;
-      this.y += this.vy;
-      this.pulseAngle += this.pulseSpeed;
-
-      // Soft boundary wrap
-      if (this.y < -30) this.reset(false);
-      if (this.x < -30) this.x = width + 30;
-      if (this.x > width + 30) this.x = -30;
-    }
-
-    draw(ctx) {
-      const currentAlpha = this.alpha * (0.8 + Math.sin(this.pulseAngle) * 0.2);
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-      ctx.fillStyle = \`rgba(\${this.color.r}, \${this.color.g}, \${this.color.b}, \${currentAlpha})\`;
-      ctx.shadowBlur = this.radius * 6;
-      ctx.shadowColor = \`rgba(\${this.color.r}, \${this.color.g}, \${this.color.b}, 0.8)\`;
-      ctx.fill();
-      ctx.shadowBlur = 0; // reset
-    }
-  }
+  const currentPositions = [];
+  const wrapH = height + 80;
+  const wrapW = width + 80;
 
   for (let i = 0; i < PARTICLE_COUNT; i++) {
-    particles.push(new Particle());
+    const p = particleSeeds[i];
+    // Deterministic position at time t
+    const rawY = p.initY - (p.vy * t * 8);
+    const y = ((rawY % wrapH) + wrapH) % wrapH - 40;
+
+    const rawX = p.initX + Math.sin(t * 0.8 + p.phase) * 35 + p.vx * (t / DURATION);
+    const x = ((rawX % wrapW) + wrapW) % wrapW - 40;
+
+    const currentAlpha = p.baseAlpha * (0.8 + Math.sin(t * p.pulseSpeed + p.phase) * 0.2);
+    currentPositions.push({ x, y, radius: p.radius, color: p.color, alpha: currentAlpha });
   }
 
-  function render() {
-    ctx.fillStyle = '#050814';
-    ctx.fillRect(0, 0, width, height);
+  // Draw connection filaments
+  for (let i = 0; i < currentPositions.length; i++) {
+    const pi = currentPositions[i];
+    for (let j = i + 1; j < currentPositions.length; j++) {
+      const pj = currentPositions[j];
+      const dx = pi.x - pj.x;
+      const dy = pi.y - pj.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Draw neural connection filaments
-    for (let i = 0; i < particles.length; i++) {
-      for (let j = i + 1; j < particles.length; j++) {
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < CONNECTION_DIST) {
-          const lineAlpha = (1 - dist / CONNECTION_DIST) * 0.25;
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = \`rgba(99, 102, 241, \${lineAlpha})\`;
-          ctx.lineWidth = 1;
-          ctx.stroke();
-        }
+      if (dist < CONNECTION_DIST) {
+        const lineAlpha = (1 - dist / CONNECTION_DIST) * 0.25 * Math.min(pi.alpha, pj.alpha);
+        ctx.beginPath();
+        ctx.moveTo(pi.x, pi.y);
+        ctx.lineTo(pj.x, pj.y);
+        ctx.strokeStyle = \`rgba(99, 102, 241, \${lineAlpha.toFixed(3)})\`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
       }
     }
-
-    // Update and draw particles
-    for (const p of particles) {
-      p.update();
-      p.draw(ctx);
-    }
-
-    requestAnimationFrame(render);
   }
 
-  render();
-})();`
+  // Draw particles
+  for (let i = 0; i < currentPositions.length; i++) {
+    const p = currentPositions[i];
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    ctx.fillStyle = \`rgba(\${p.color.r}, \${p.color.g}, \${p.color.b}, \${p.alpha.toFixed(3)})\`;
+    ctx.shadowBlur = p.radius * 6;
+    ctx.shadowColor = \`rgba(\${p.color.r}, \${p.color.g}, \${p.color.b}, 0.8)\`;
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+}
+
+function loop(now) {
+  if (!isExporting) {
+    const elapsed = ((now - previewStartTime) / 1000) % DURATION;
+    drawScene(elapsed);
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);`
+  },
+  {
+    id: 'flight-route-radar',
+    name: 'Flight Radar & Jet Path Motion',
+    category: 'Particle Video',
+    description: 'Commercial 4K aviation route tracker with deterministic aircraft kinematics, glowing contrails, waypoint beacons, and HUD coordinates.',
+    recommendedPresetId: 'video-4k',
+    recommendedFormat: 'mp4',
+    html: `<div class="radar-wrapper">
+  <canvas id="radar-canvas"></canvas>
+  <div class="hud-overlay">
+    <div class="hud-header">
+      <span class="hud-tag">ATC RADAR • FLIGHT SK-408</span>
+      <span class="hud-status">TRACKING ACTIVE</span>
+    </div>
+  </div>
+</div>`,
+    css: `body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #060913;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.radar-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hud-overlay {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  right: 32px;
+  pointer-events: none;
+}
+
+.hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+.hud-tag {
+  color: #38bdf8;
+  font-weight: 700;
+  background: rgba(14, 165, 233, 0.12);
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.hud-status {
+  color: #34d399;
+  font-weight: 600;
+  background: rgba(52, 211, 153, 0.12);
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}`,
+    js: `// Commercial Flight Radar & Airplane Route Tracker
+const DURATION = 8.0; // Otomatis terbaca oleh UI: 8.0 Detik
+window.ANIMATION_DURATION = DURATION;
+
+let isExporting = false;
+let previewStartTime = performance.now();
+
+window.setExportState = function(state) {
+  isExporting = state;
+  if (!state) previewStartTime = performance.now();
+};
+
+window.renderSingleFrame = function(t) {
+  drawScene(t); // Menggambar frame tepat di detik t
+};
+
+const canvas = document.getElementById('radar-canvas');
+if (!canvas) return;
+const ctx = canvas.getContext('2d');
+
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+});
+
+// Cubic Bezier waypoint coordinates
+function getBezierPoint(p0, p1, p2, p3, t) {
+  const u = 1 - t;
+  const tt = t * t;
+  const uu = u * u;
+  const uuu = uu * u;
+  const ttt = tt * t;
+
+  return {
+    x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
+    y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y
+  };
+}
+
+function getBezierTangent(p0, p1, p2, p3, t) {
+  const u = 1 - t;
+  return {
+    x: 3 * u * u * (p1.x - p0.x) + 6 * u * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x),
+    y: 3 * u * u * (p1.y - p0.y) + 6 * u * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y)
+  };
+}
+
+function drawScene(t) {
+  const progress = Math.min(Math.max((t % DURATION) / DURATION, 0), 1);
+
+  ctx.fillStyle = '#060913';
+  ctx.fillRect(0, 0, width, height);
+
+  // Radar Grid Background
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+  ctx.lineWidth = 1;
+  const gridSize = 100;
+  for (let x = 0; x < width; x += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+  for (let y = 0; y < height; y += gridSize) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(width, y);
+    ctx.stroke();
+  }
+
+  // Radar Range Rings
+  const centerX = width * 0.5;
+  const centerY = height * 0.52;
+  const maxRadius = Math.min(width, height) * 0.42;
+
+  for (let r = maxRadius * 0.25; r <= maxRadius; r += maxRadius * 0.25) {
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Rotating Radar Beam sweep
+  const sweepAngle = (t * (Math.PI * 2 / 4)) % (Math.PI * 2);
+  const sweepGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+  sweepGrad.addColorStop(0, 'rgba(56, 189, 248, 0.25)');
+  sweepGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(centerX, centerY);
+  ctx.arc(centerX, centerY, maxRadius, sweepAngle - 0.4, sweepAngle);
+  ctx.closePath();
+  ctx.fillStyle = sweepGrad;
+  ctx.fill();
+  ctx.restore();
+
+  // Waypoints
+  const p0 = { x: width * 0.15, y: height * 0.72 };
+  const p1 = { x: width * 0.35, y: height * 0.22 };
+  const p2 = { x: width * 0.65, y: height * 0.85 };
+  const p3 = { x: width * 0.88, y: height * 0.28 };
+
+  // Draw full planned flight path dashed
+  ctx.beginPath();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([8, 12]);
+  for (let i = 0; i <= 60; i++) {
+    const pt = getBezierPoint(p0, p1, p2, p3, i / 60);
+    if (i === 0) ctx.moveTo(pt.x, pt.y);
+    else ctx.lineTo(pt.x, pt.y);
+  }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Draw completed path with glowing cyan gradient
+  ctx.beginPath();
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 5;
+  ctx.shadowColor = '#0284c7';
+  ctx.shadowBlur = 14;
+  const steps = Math.floor(progress * 60);
+  for (let i = 0; i <= steps; i++) {
+    const pt = getBezierPoint(p0, p1, p2, p3, i / 60);
+    if (i === 0) ctx.moveTo(pt.x, pt.y);
+    else ctx.lineTo(pt.x, pt.y);
+  }
+  const currentPlane = getBezierPoint(p0, p1, p2, p3, progress);
+  if (steps > 0) ctx.lineTo(currentPlane.x, currentPlane.y);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Waypoint Markers
+  [p0, p3].forEach((pt, idx) => {
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = idx === 0 ? '#38bdf8' : '#f59e0b';
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = '12px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(idx === 0 ? 'ORIGIN [W-01]' : 'DESTINATION [W-02]', pt.x - 30, pt.y + 24);
+  });
+
+  // Current Airplane Position & Heading
+  const tangent = getBezierTangent(p0, p1, p2, p3, progress);
+  const headingAngle = Math.atan2(tangent.y, tangent.x);
+
+  ctx.save();
+  ctx.translate(currentPlane.x, currentPlane.y);
+  ctx.rotate(headingAngle);
+
+  // Jet Contrail Trail Particles
+  for (let c = 1; c <= 5; c++) {
+    ctx.beginPath();
+    ctx.arc(-c * 16, 0, 4 - c * 0.6, 0, Math.PI * 2);
+    ctx.fillStyle = \`rgba(56, 189, 248, \${(0.6 - c * 0.1).toFixed(2)})\`;
+    ctx.fill();
+  }
+
+  // Airplane Geometry
+  ctx.fillStyle = '#ffffff';
+  ctx.shadowColor = '#38bdf8';
+  ctx.shadowBlur = 12;
+
+  // Fuselage & Wings
+  ctx.beginPath();
+  ctx.moveTo(22, 0);       // Nose
+  ctx.lineTo(-4, -18);     // Left wingtip
+  ctx.lineTo(-2, -6);      // Wing trailing
+  ctx.lineTo(-14, -14);    // Tail left
+  ctx.lineTo(-16, -1);     // Tail center
+  ctx.lineTo(-16, 1);
+  ctx.lineTo(-14, 14);     // Tail right
+  ctx.lineTo(-2, 6);       // Wing trailing
+  ctx.lineTo(-4, 18);      // Right wingtip
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // Dynamic Telemetry HUD beside plane
+  const altitude = Math.round(32000 + Math.sin(progress * Math.PI) * 4000);
+  const speedKnots = Math.round(480 + Math.sin(progress * Math.PI * 2) * 25);
+  ctx.font = '11px "JetBrains Mono", monospace';
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillText(\`ALT: \${altitude} FT\`, currentPlane.x + 28, currentPlane.y - 12);
+  ctx.fillStyle = '#94a3b8';
+  ctx.fillText(\`SPD: \${speedKnots} KTS\`, currentPlane.x + 28, currentPlane.y + 4);
+  ctx.fillText(\`T: \${t.toFixed(2)}s / \${DURATION.toFixed(1)}s\`, currentPlane.x + 28, currentPlane.y + 20);
+}
+
+function loop(now) {
+  if (!isExporting) {
+    const elapsed = ((now - previewStartTime) / 1000) % DURATION;
+    drawScene(elapsed);
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);`
   },
   {
     id: 'motion-gradient-bg',

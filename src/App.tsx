@@ -16,6 +16,7 @@ import {
 } from './types';
 import { analyzeAdobeStockCompliance } from './utils/adobeStockChecker';
 import { ExportEngine } from './utils/exportEngine';
+import { detectAnimationDuration } from './utils/durationParser';
 
 export const App: React.FC = () => {
   // Current Code State
@@ -23,6 +24,7 @@ export const App: React.FC = () => {
   const [html, setHtml] = useState<string>(STARTER_TEMPLATES[0].html);
   const [css, setCss] = useState<string>(STARTER_TEMPLATES[0].css);
   const [js, setJs] = useState<string>(STARTER_TEMPLATES[0].js);
+  const [detectedDuration, setDetectedDuration] = useState<number>(() => detectAnimationDuration(STARTER_TEMPLATES[0].js));
 
   // Injected External Scripts & Styles
   const [externalScripts, setExternalScripts] = useState<string[]>([]);
@@ -96,6 +98,21 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [autoFit, calculateAutoFit]);
 
+  // Synchronize detected duration on code changes
+  useEffect(() => {
+    const iframe = artboardContentRef.current?.querySelector('iframe');
+    const canvasWin = iframe?.contentWindow || null;
+    const dur = detectAnimationDuration(js, canvasWin);
+    setDetectedDuration(dur);
+  }, [js]);
+
+  // Callback from MainCanvas iframe postMessage
+  const handleDurationDetected = useCallback((dur: number) => {
+    if (typeof dur === 'number' && dur > 0) {
+      setDetectedDuration(dur);
+    }
+  }, []);
+
   // Real-time Adobe Stock Compliance Analysis
   const compliance = useMemo(() => {
     return analyzeAdobeStockCompliance(
@@ -105,10 +122,10 @@ export const App: React.FC = () => {
       css,
       js,
       'png',
-      10,
+      detectedDuration,
       30
     );
-  }, [activeWidth, activeHeight, html, css, js]);
+  }, [activeWidth, activeHeight, html, css, js, detectedDuration]);
 
   // Handle Preset Selection
   const handleSelectPreset = (id: ResolutionPresetId) => {
@@ -124,6 +141,9 @@ export const App: React.FC = () => {
     setHtml(tmpl.html);
     setCss(tmpl.css);
     setJs(tmpl.js);
+
+    const dur = detectAnimationDuration(tmpl.js, null);
+    setDetectedDuration(dur);
 
     // Set matching preset
     const recPreset = CANVAS_PRESETS.find(p => p.id === tmpl.recommendedPresetId);
@@ -152,6 +172,12 @@ export const App: React.FC = () => {
       alert('Kanvas belum siap untuk diekspor.');
       return;
     }
+
+    const iframe = artboardEl.querySelector('iframe');
+    const canvasWindow = iframe?.contentWindow || null;
+    const finalDuration = detectAnimationDuration(js, canvasWindow);
+    settings.duration = finalDuration;
+    settings.canvasWindow = canvasWindow;
 
     try {
       if (settings.format === 'png') {
@@ -249,6 +275,7 @@ export const App: React.FC = () => {
           isPlaying={isPlaying}
           speed={speed}
           onConsoleError={(err) => setConsoleErrors(prev => [err, ...prev.slice(0, 4)])}
+          onDurationDetected={handleDurationDetected}
         />
 
         {/* 3. Floating Bottom Dock (Ray.so / Figma Style) */}
@@ -267,6 +294,7 @@ export const App: React.FC = () => {
           onOpenExportModal={() => setIsExportModalOpen(true)}
           isRendering={renderProgress.isRendering}
           renderingPercentage={renderProgress.percentage}
+          detectedDuration={detectedDuration}
         />
       </main>
 
@@ -305,6 +333,7 @@ export const App: React.FC = () => {
         defaultFilename={`stockcode-${activeTemplateId}`}
         background={backgroundStyle === 'transparent' ? 'transparent' : (backgroundStyle === 'custom' ? customBgColor : '#ffffff')}
         compliance={compliance}
+        detectedDuration={detectedDuration}
       />
 
       {/* 6. Curator Checklist & Auto-Keywords Modal */}
